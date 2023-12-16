@@ -1,5 +1,16 @@
 from udp import UDP
+from vpn import VPNBody
+import json
+
+user = input("Introduce the user: ")
+password = input("Introduce the password: ")
+dest_ip = input("Introduce the destination ip: ")
+dest_port = int(input("Introduce the destination port: "))
+data = input("Introduce the data: ")
 
 client = UDP('localhost', 5000)
 
-client.send('hola', ('localhost', 8000))
+body = VPNBody(user, password, dest_ip, dest_port, data)
+body = json.dumps(body, default=lambda o: o.__dict__)
+
+client.send(body, ('localhost', 5001))

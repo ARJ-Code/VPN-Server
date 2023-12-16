@@ -26,7 +26,7 @@ class UDP:
 
         s.sendto(udp_header + data, (dest_ip, dest_port))
 
-        print(f'UDP data sent to {dest_ip} port {dest_port}')
+        print(f'UDP data sent to {dest_ip} port {dest_port}\n')
         s.close()
 
     def bind(self):
@@ -59,15 +59,13 @@ class UDP:
             print(f'Send from port {src_port} to {dest_port}')
 
             if checksum != calculated_checksum:
-                print('Corrupted data')
+                print('Corrupted data\n')
             else:
                 data = data[28:].decode('utf-8')
                 print(f'Data: {data}')
-                print(f'Length: {length}, Checksum: {checksum}')
+                print(f'Length: {length}, Checksum: {checksum}\n')
 
                 p = True
-
-            print('******************************************\n')
 
             if p:
                 yield data

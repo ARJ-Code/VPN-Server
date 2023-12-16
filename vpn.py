@@ -22,6 +22,27 @@ class UserClient:
         return value
 
 
+class VPNBody:
+    def __init__(self, user: str, password: str, dest_ip: str, dest_port: int, data: str):
+        self.user = user
+        self.password = password
+        self.dest_ip = dest_ip
+        self.dest_port = dest_port
+        self.data = data
+
+    @staticmethod
+    def dict_to_obj(dict):
+        user = dict['user']
+        password = dict['password']
+        dest_ip = dict['dest_ip']
+        dest_port = dict['dest_port']
+        data = dict['data']
+
+        value = VPNBody(user, password, dest_ip, dest_port, data)
+
+        return value
+
+
 class VPN:
     def __init__(self, ip, port) -> None:
         self.__data = VPN.__read_data()
@@ -41,8 +62,25 @@ class VPN:
         print('User registered\n')
 
     def start(self):
+        print('VPN started\n')
+
         for i in self.__udp.bind():
-            print(i)
+            try:
+                body = VPNBody.dict_to_obj(json.loads(i))
+                self.__request(body)
+            except:
+                continue
+
+    def __request(self, body: VPNBody):
+        user = next(
+            (i for i in self.__data if i.user == body.user and i.password == body.password), None)
+
+        if user is None:
+            print('User not found\n')
+
+            return
+
+        self.__udp.send(body.data, (body.dest_ip, body.dest_port))
 
     @staticmethod
     def __read_data():
@@ -54,16 +92,10 @@ class VPN:
             file = open(path, 'r')
             data = json.load(file)
             file.close()
-            if isinstance(data, list) and all(VPN.__is_register_client(i) for i in data):
-                return [UserClient.dict_to_obj(i) for i in data if VPN.__is_register_client(i)]
-            else:
-                return []
+
+            return [UserClient.dict_to_obj(i) for i in data]
         except:
             return []
-
-    @staticmethod
-    def __is_register_client(obj):
-        return 'id' in obj and 'user' in obj and 'password' in obj and 'id_vlan' in obj
 
     def __save_data(self):
         path = 'data.json'
