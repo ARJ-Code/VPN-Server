@@ -61,15 +61,19 @@ class VPN:
 
         print('User registered\n')
 
-    def start(self):
+    def run(self):
         print('VPN started\n')
 
-        for i in self.__udp.bind():
+        for i in self.__udp.run():
             try:
                 body = VPNBody.dict_to_obj(json.loads(i))
                 self.__request(body)
             except:
                 continue
+
+    def stop(self):
+        self.__udp.stop()
+        print('VPN stopped\n')
 
     def __request(self, body: VPNBody):
         user = next(
