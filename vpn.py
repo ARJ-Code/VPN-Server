@@ -48,7 +48,7 @@ class VPN:
         self.__data = VPN.__read_data()
         self.__udp = UDP(ip, port)
 
-    def register(self, user: UserClient):
+    def create_user(self, user: UserClient):
         if any(user.user == i.user for i in self.__data):
             print('User already registered\n')
 
@@ -60,6 +60,27 @@ class VPN:
         self.__save_data()
 
         print('User registered\n')
+
+    def remove_user(self, user_id: int):
+        if user_id < 0 or user_id >= len(self.__data):
+            print('User not found\n')
+
+            return
+
+        new_data = []
+        ind = 0
+
+        for i in self.__data:
+            if i.id != user_id:
+                i.id = ind
+                ind += 1
+
+                new_data.append(i)
+
+        self.__data = new_data
+        self.__save_data()
+
+        print('User removed\n')
 
     def run(self):
         print('VPN started\n')
@@ -74,6 +95,12 @@ class VPN:
     def stop(self):
         self.__udp.stop()
         print('VPN stopped\n')
+
+    def show_users(self):
+        for i in self.__data:
+            print(
+                f'Id: {i.id} User: {i.user} Password: {i.password} Id_VLAN: {i.id_vlan}')
+        print()
 
     def __request(self, body: VPNBody):
         user = next(
