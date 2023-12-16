@@ -35,6 +35,7 @@ class UDP:
 
         while True:
             data, src_addr = s.recvfrom(1024)
+            p = False
 
             udp_header = data[20:28]
             udp_header = struct.unpack('!HHHH', udp_header)
@@ -63,8 +64,13 @@ class UDP:
                 data = data[28:].decode('utf-8')
                 print(f'Data: {data}')
                 print(f'Length: {length}, Checksum: {checksum}')
-                
+
+                p = True
+
             print('******************************************\n')
+
+            if p:
+                yield data
 
     @staticmethod
     def __calculate_checksum(source_ip, dest_ip, data):

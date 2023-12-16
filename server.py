@@ -2,4 +2,5 @@ from udp import UDP
 
 server = UDP('localhost', 8000)
 
-server.bind()
+for i in server.bind():
+    print(i)
