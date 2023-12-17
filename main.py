@@ -1,4 +1,6 @@
 from vpn import VPN, UserClient
+from udp import UDP
+from tcp import TCP
 import threading
 
 
@@ -15,7 +17,10 @@ def help():
 ip = 'localhost'
 port = 5001
 
-vpn = VPN(ip, port)
+# udp = UDP(ip, port)
+udp = TCP(ip, port)
+
+vpn = VPN(udp)
 vpn_thread = None
 
 print("Welcome to the VPN")

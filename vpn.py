@@ -1,6 +1,6 @@
 import os
 import json
-from udp import UDP
+from network_protocol import NetWorkProtocol
 
 
 class UserClient:
@@ -44,9 +44,9 @@ class VPNBody:
 
 
 class VPN:
-    def __init__(self, ip, port) -> None:
+    def __init__(self, protocol: NetWorkProtocol) -> None:
         self.__data = VPN.__read_data()
-        self.__udp = UDP(ip, port)
+        self.protocol = protocol
 
     def create_user(self, user: UserClient):
         if any(user.user == i.user for i in self.__data):
@@ -85,7 +85,7 @@ class VPN:
     def run(self):
         print('VPN started\n')
 
-        for i in self.__udp.run():
+        for i in self.protocol.run():
             try:
                 body = VPNBody.dict_to_obj(json.loads(i))
                 self.__request(body)
@@ -93,7 +93,7 @@ class VPN:
                 continue
 
     def stop(self):
-        self.__udp.stop()
+        self.protocol.stop()
         print('VPN stopped\n')
 
     def show_users(self):
@@ -111,7 +111,7 @@ class VPN:
 
             return
 
-        self.__udp.send(body.data, (body.dest_ip, body.dest_port))
+        self.protocol.send(body.data, (body.dest_ip, body.dest_port))
 
     @staticmethod
     def __read_data():
