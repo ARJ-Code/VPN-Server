@@ -9,7 +9,7 @@ def help():
     print("create_user <user> <password> <id_vlan>: Create a new user")
     print('remove_user <id>: Remove a user')
     print('show_users: Show all users')
-    print("start: Start the VPN")
+    print("start <protocol>: Start the VPN")
     print("stop: Stop the VPN")
     print("exit: Exit the program\n")
 
@@ -17,10 +17,10 @@ def help():
 ip = 'localhost'
 port = 5001
 
-# udp = UDP(ip, port)
-udp = TCP(ip, port)
+udp = UDP(ip, port)
+tcp = TCP(ip, port)
 
-vpn = VPN(udp)
+vpn = VPN(tcp)
 vpn_thread = None
 
 print("Welcome to the VPN")
@@ -50,6 +50,19 @@ while True:
         if (vpn_thread is not None):
             print("VPN already started\n")
             continue
+
+        if len(command) == 1:
+            print("Invalid command\n")
+            continue
+
+        if command[1] == "tcp":
+            vpn.protocol = tcp
+        elif command[1] == "udp":
+            vpn.protocol = udp
+        else:
+            print("Invalid command\n")
+            continue
+
         vpn_thread = threading.Thread(target=vpn.run)
         vpn_thread.start()
 

@@ -4,8 +4,8 @@ run:
 
 .PHONY: client
 client:
-	python3 client.py
+	python3 client.py "$(protocol)"
 
 .PHONY: server
 server:
-	python3 server.py
+	python3 server.py "$(protocol)"
