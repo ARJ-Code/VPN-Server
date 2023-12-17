@@ -1,11 +1,11 @@
 .PHONY: run
 run:
-	python3 main.py
+	python3 src/main.py
 
 .PHONY: client
 client:
-	python3 client.py "$(protocol)"
+	python3 src/client.py "$(protocol)"
 
 .PHONY: server
 server:
-	python3 server.py "$(protocol)"
+	python3 src/server.py "$(protocol)"
