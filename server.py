@@ -1,6 +1,7 @@
 from udp import UDP
+from tcp import TCP
 
-server = UDP('localhost', 5002)
+server = TCP('localhost', 5002)
 
 print('Server started\n')
 

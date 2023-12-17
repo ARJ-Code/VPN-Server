@@ -44,6 +44,9 @@ class TCP(NetWorkProtocol):
 
         print(f'TCP data sent to {dest_ip} port {dest_port}')
 
+        self.__finished_client(s, dest_ip, dest_port, client_seq, client_ack)
+        print('TCP connection finished\n')
+
         s.close()
 
     def run(self):
@@ -54,14 +57,17 @@ class TCP(NetWorkProtocol):
         s.setblocking(False)
 
         while not self.__stop:
-            self.__new_connection(s)
+            p, data = self.__new_connection(s)
+
+            if p:
+                yield data
 
     def __new_connection(self, s):
         handshake, src_ip_c, src_port_c, server_seq, server_ack = self.__handshake_server(
             s)
 
         if not handshake:
-            return
+            return (False, '')
 
         print('TCP connection established')
 
@@ -71,9 +77,19 @@ class TCP(NetWorkProtocol):
         if not package:
             print('TCP connection error\n')
 
-            return
+            return (False, '')
 
         print(f'Data: {data}')
+
+        fin = self.__finished_server(
+            s, src_ip_c, src_port_c, server_seq, server_ack)
+
+        if fin:
+            print('TCP connection finished\n')
+        else:
+            print('TCP connection error\n')
+
+        return (True, data)
 
     def __handshake_client(self, dest_ip, dest_port, s):
         client_seq = 0
@@ -123,6 +139,11 @@ class TCP(NetWorkProtocol):
 
             if ack:
                 return True
+
+    def __finished_client(self, s, dest_ip, dest_port, client_seq, client_ack):
+        fin_data = self.__build_package(
+            dest_ip, dest_port, client_seq, client_ack, (5 << 12) | FIN, '')
+        s.sendto(fin_data, (dest_ip, dest_port))
 
     def __handshake_server(self, s):
         syn, src_ip_c, src_port_c, seq_s, ack_s, _ = self.__listening(
@@ -174,6 +195,11 @@ class TCP(NetWorkProtocol):
             ack_data = self.__build_package(
                 src_ip, src_port, server_seq, server_ack, (5 << 12))
             s.sendto(ack_data, (src_ip, src_port))
+
+    def __finished_server(self, s, src_ip, src_port, server_seq, server_ack):
+        fin, _, _, _, _, _ = self.__listening(
+            s, lambda flags: flags & FIN, src_ip, src_port, server_seq, server_ack)
+        return fin
 
     def __listening(self, s, check_flags, request_ip='-1', request_port=-1, request_seq=-1, request_ack=-1):
         preview = request_ip != '-1' and request_port != - \
