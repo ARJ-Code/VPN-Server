@@ -8,8 +8,13 @@ class UDP(NetWorkProtocol):
         super().__init__(ip, port)
         self.__stop = False
 
+        self.__s = socket.socket(
+            socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        self.__s.bind((self._ip, self._port))
+        self.__s.setblocking(False)
+
     def send(self, data, dest_addr):
-        s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        s = self.__s
         dest_ip, dest_port = dest_addr
         dest_ip = '127.0.0.1' if dest_ip == 'localhost' else dest_ip
 
@@ -27,14 +32,11 @@ class UDP(NetWorkProtocol):
 
         s.sendto(udp_header + data, (dest_ip, dest_port))
 
-        print(f'UDP data sent to {dest_ip} port {dest_port}\n')
-        s.close()
+        print(f'UDP data sent to {dest_ip}{dest_port}\n')
 
     def run(self):
         self.__stop = False
-        s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
-        s.bind((self._ip, self._port))
-        s.setblocking(False)
+        s = self.__s
 
         while not self.__stop:
             try:
@@ -59,8 +61,7 @@ class UDP(NetWorkProtocol):
                 calculated_checksum = UDP.__calculate_checksum(
                     sender_ip, self._ip, zero_checksum_header + data[28:])
 
-                print(f'UDP data received from {sender_ip}')
-                print(f'Send from port {src_port} to {dest_port}')
+                print(f'UDP data received from {sender_ip}:{dest_port}')
 
                 if checksum != calculated_checksum:
                     print('Corrupted data\n')

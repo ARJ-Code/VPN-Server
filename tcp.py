@@ -16,13 +16,16 @@ class TCP(NetWorkProtocol):
         super().__init__(ip, port)
         self.__stop = False
 
+        self.__s = socket.socket(socket.AF_INET, socket.SOCK_RAW,
+                                 socket.IPPROTO_TCP)
+        self.__s.bind((self._ip, self._port))
+        self.__s.setblocking(False)
+
     def send(self, data, dest_addr):
-        s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
         dest_ip, dest_port = dest_addr
         dest_ip = '127.0.0.1' if dest_ip == 'localhost' else dest_ip
 
-        s.bind((self._ip, self._port))
-        s.setblocking(False)
+        s = self.__s
 
         handshake, client_seq, client_ack = self.__handshake_client(
             dest_ip, dest_port, s)
@@ -32,7 +35,7 @@ class TCP(NetWorkProtocol):
 
             return
 
-        print('TCP connection established')
+        print(f'TCP connection established server {dest_ip}:{dest_port}')
 
         send_package = self.__send_package(
             s, dest_ip, dest_port, client_seq, client_ack, data)
@@ -42,19 +45,14 @@ class TCP(NetWorkProtocol):
 
             return
 
-        print(f'TCP data sent to {dest_ip} port {dest_port}')
+        print(f'TCP data sent to {dest_ip}:{dest_port}')
 
         self.__finished_client(s, dest_ip, dest_port, client_seq, client_ack)
         print('TCP connection finished\n')
 
-        s.close()
-
     def run(self):
         self.__stop = False
-        s = socket.socket(socket.AF_INET, socket.SOCK_RAW,
-                          socket.IPPROTO_TCP)
-        s.bind((self._ip, self._port))
-        s.setblocking(False)
+        s = self.__s
 
         while not self.__stop:
             p, data = self.__new_connection(s)
@@ -69,7 +67,7 @@ class TCP(NetWorkProtocol):
         if not handshake:
             return (False, '')
 
-        print('TCP connection established')
+        print(f'TCP connection established client {src_ip_c}:{src_port_c}')
 
         package, data = self.__received_package(
             s, src_ip_c, src_port_c, server_seq, server_ack)
@@ -79,6 +77,7 @@ class TCP(NetWorkProtocol):
 
             return (False, '')
 
+        print(f'TCP data received from {src_ip_c}:{src_port_c}')
         print(f'Data: {data}')
 
         fin = self.__finished_server(
