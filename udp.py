@@ -39,7 +39,6 @@ class UDP(NetWorkProtocol):
         while not self.__stop:
             try:
                 data, src_addr = s.recvfrom(1024)
-                print(data)
                 p = False
 
                 udp_header = data[20:28]
@@ -74,7 +73,7 @@ class UDP(NetWorkProtocol):
 
                 if p:
                     yield data
-            except:
+            except BlockingIOError:
                 continue
 
     def stop(self):
