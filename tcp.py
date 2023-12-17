@@ -28,13 +28,22 @@ class TCP(NetWorkProtocol):
             dest_ip, dest_port, s)
 
         if not handshake:
-            print("Handshake failed\n")
+            print('TCP connection error\n')
 
             return
 
-        print('TCP connection established\n')
+        print('TCP connection established')
 
-        print(f'TCP data sent to {dest_ip} port {dest_port}\n')
+        send_package = self.__send_package(
+            s, dest_ip, dest_port, client_seq, client_ack, data)
+
+        if not send_package:
+            print('TCP connection error\n')
+
+            return
+
+        print(f'TCP data sent to {dest_ip} port {dest_port}')
+
         s.close()
 
     def run(self):
@@ -48,14 +57,23 @@ class TCP(NetWorkProtocol):
             self.__new_connection(s)
 
     def __new_connection(self, s):
-        handshake, server_seq, server_ack = self.__handshake_server(s)
+        handshake, src_ip_c, src_port_c, server_seq, server_ack = self.__handshake_server(
+            s)
 
         if not handshake:
             return
 
-        print('TCP connection established\n')
+        print('TCP connection established')
 
-        return
+        package, data = self.__received_package(
+            s, src_ip_c, src_port_c, server_seq, server_ack)
+
+        if not package:
+            print('TCP connection error\n')
+
+            return
+
+        print(f'Data: {data}')
 
     def __handshake_client(self, dest_ip, dest_port, s):
         client_seq = 0
@@ -67,7 +85,7 @@ class TCP(NetWorkProtocol):
         s.sendto(syn_data, (dest_ip, dest_port))
 
         syn_ack, _, _, seq_s, ack_s, _ = self.__listening(
-            s, lambda flags: flags & SYN and flags & ACK)
+            s, lambda flags: flags & SYN and flags & ACK, dest_ip, dest_port, client_seq, client_ack)
 
         if not syn_ack:
             return (False, 0, 0)
@@ -82,12 +100,36 @@ class TCP(NetWorkProtocol):
 
         return (True, client_seq, client_ack)
 
+    def __send_package(self, s, dest_ip, dest_port, client_seq, client_ack, data):
+        ind = 0
+
+        while True:
+            if (ind == MAX_COUNT):
+                return False
+            ind += 1
+
+            package = self.__build_package(
+                dest_ip, dest_port, client_seq, client_ack, (5 << 12), data)
+            s.sendto(package, (dest_ip, dest_port))
+
+            ack, _, _, seq_s, ack_s, _ = self.__listening(
+                s, lambda flags:  flags & ACK, dest_ip, dest_port, client_seq, client_ack)
+
+            if seq_s == -1 or ack_s == -1:
+                return False
+
+            client_seq = ack_s
+            client_ack = seq_s+1
+
+            if ack:
+                return True
+
     def __handshake_server(self, s):
         syn, src_ip_c, src_port_c, seq_s, ack_s, _ = self.__listening(
             s, lambda flags: flags & SYN)
 
         if not syn:
-            return (False, 0, 0)
+            return (False, 0, 0, 0, 0)
 
         server_seq = ack_s
         server_ack = seq_s+1
@@ -98,23 +140,49 @@ class TCP(NetWorkProtocol):
         s.sendto(syn_ack_data, (src_ip_c, src_port_c))
 
         ack, _, _, seq_s, ack_s, _ = self.__listening(
-            s, lambda flags: flags & ACK)
+            s, lambda flags: flags & ACK, src_ip_c, src_port_c, server_seq, server_ack)
 
         if not ack:
-            return (False, 0, 0)
+            return (False, 0, 0, 0, 0)
 
-        server_seq = ack_s
-        server_ack = seq_s+1
+        return (True, src_ip_c, src_port_c, server_seq, server_ack)
 
-        return (True, server_seq, server_ack)
+    def __received_package(self, s, src_ip, src_port, server_seq, server_ack):
+        ind = 0
 
-    def __listening(self, s, check_flags, dest_port=-1, client_seq=-1, client_ack=-1):
-        preview = dest_port != -1 and client_seq != -1 and client_ack != -1
+        while True:
+            if (ind == MAX_COUNT):
+                return (False, '')
+            ind += 1
+
+            package, _, _, seq_c, ack_c, data = self.__listening(
+                s, lambda _:  True, src_port, server_seq, server_ack)
+
+            if seq_c == -1 or ack_c == -1:
+                return (False, '')
+
+            server_seq = ack_c
+            server_ack = seq_c+1
+
+            if package:
+                ack_data = self.__build_package(
+                    src_ip, src_port, server_seq, server_ack, (5 << 12) | ACK)
+                s.sendto(ack_data, (src_ip, src_port))
+
+                return (True, data)
+
+            ack_data = self.__build_package(
+                src_ip, src_port, server_seq, server_ack, (5 << 12))
+            s.sendto(ack_data, (src_ip, src_port))
+
+    def __listening(self, s, check_flags, request_ip='-1', request_port=-1, request_seq=-1, request_ack=-1):
+        preview = request_ip != '-1' and request_port != - \
+            1 and request_seq != -1 and request_ack != -1
 
         ind = 0
         while True:
             if ind == MAX_COUNT:
-                return (False, 0, 0, 0, 0, '')
+                return (False, -1, -1, -1, -1, '')
             ind += 1
 
             try:
@@ -124,7 +192,7 @@ class TCP(NetWorkProtocol):
                     data)
 
                 if preview:
-                    if dest_port_r != self._port or dest_port != src_port_r:
+                    if dest_port_r != self._port or request_port != src_port_r:
                         continue
                 else:
                     if dest_port_r != self._port:
@@ -132,20 +200,21 @@ class TCP(NetWorkProtocol):
 
                 sender_ip, _ = src_addr
 
+                if preview and sender_ip != request_ip:
+                    continue
+
                 if not self.__check_package(sender_ip, checksum_r, data):
                     continue
 
                 if preview:
-                    if client_ack == seq_r and client_seq+1 == ack_r and check_flags(flags_r):
-                        break
+                    if request_ack == seq_r and request_seq+1 == ack_r:
+                        return (check_flags(flags_r), sender_ip, src_port_r, seq_r, ack_r, data[40:].decode('utf-8'))
                 else:
                     if check_flags(flags_r):
-                        break
+                        return (check_flags(flags_r), sender_ip, src_port_r, seq_r, ack_r, data[40:].decode('utf-8'))
 
             except BlockingIOError:
                 continue
-
-        return (True, sender_ip, src_port_r, seq_r, ack_r, data[40:].decode('utf-8'))
 
     def __build_package(self,  dest_ip, dest_port, seq, ack, flags, data=''):
         data = data.encode('utf-8')
