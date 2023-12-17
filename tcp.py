@@ -1,6 +1,6 @@
 import socket
 import struct
-from network_protocol import NetWorkProtocol
+from vpn_core import NetWorkProtocol
 
 FIN = 0x01
 SYN = 0x02

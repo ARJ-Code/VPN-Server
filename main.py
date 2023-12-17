@@ -1,6 +1,7 @@
 from vpn import VPN, UserClient
 from udp import UDP
 from tcp import TCP
+from rules import RestrictUser, RestrictVLAN
 import threading
 
 
@@ -46,13 +47,9 @@ while True:
     elif command[0] == "show_users":
         vpn.show_users()
 
-    elif command[0] == "start":
+    elif command[0] == "start" and len(command) == 2:
         if (vpn_thread is not None):
             print("VPN already started\n")
-            continue
-
-        if len(command) == 1:
-            print("Invalid command\n")
             continue
 
         if command[1] == "tcp":
@@ -73,6 +70,20 @@ while True:
         vpn.stop()
         vpn_thread.join()
         vpn_thread = None
+
+    elif command[0] == 'restrict_vlan' and len(command) == 4 and str.isdigit(command[2]):
+        rule = RestrictVLAN(command[1], command[3], int(command[2]))
+        vpn.add_rule(rule)
+
+    elif command[0] == 'restrict_user' and len(command) == 4 and str.isdigit(command[2]):
+        rule = RestrictUser(command[1], command[3], int(command[2]))
+        vpn.add_rule(rule)
+
+    elif command[0] == "show_rules":
+        vpn.show_rules()
+
+    elif command[0] == "remove_rule" and len(command) == 2 and str.isdigit(command[1]):
+        vpn.remove_rule(int(command[1]))
 
     elif command[0] == "exit":
         break

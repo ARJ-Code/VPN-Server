@@ -1,6 +1,6 @@
 import socket
 import struct
-from network_protocol import NetWorkProtocol
+from vpn_core import NetWorkProtocol
 
 
 class UDP(NetWorkProtocol):

@@ -1,52 +1,13 @@
 import os
 import json
-from network_protocol import NetWorkProtocol
-
-
-class UserClient:
-    def __init__(self, user: str, password: str, id_vlan: int):
-        self.user = user
-        self.password = password
-        self.id_vlan = id_vlan
-        self.id = 0
-
-    @staticmethod
-    def dict_to_obj(dict):
-        user = dict['user']
-        password = dict['password']
-        id_vlan = dict['id_vlan']
-
-        value = UserClient(user, password, id_vlan)
-        value.id = dict['id']
-
-        return value
-
-
-class VPNBody:
-    def __init__(self, user: str, password: str, dest_ip: str, dest_port: int, data: str):
-        self.user = user
-        self.password = password
-        self.dest_ip = dest_ip
-        self.dest_port = dest_port
-        self.data = data
-
-    @staticmethod
-    def dict_to_obj(dict):
-        user = dict['user']
-        password = dict['password']
-        dest_ip = dict['dest_ip']
-        dest_port = dict['dest_port']
-        data = dict['data']
-
-        value = VPNBody(user, password, dest_ip, dest_port, data)
-
-        return value
+from vpn_core import VPNBody, UserClient, NetWorkProtocol, VPNRule
 
 
 class VPN:
     def __init__(self, protocol: NetWorkProtocol) -> None:
         self.__data = VPN.__read_data()
         self.protocol = protocol
+        self.rules = []
 
     def create_user(self, user: UserClient):
         if any(user.user == i.user for i in self.__data):
@@ -96,6 +57,37 @@ class VPN:
         self.protocol.stop()
         print('VPN stopped\n')
 
+    def add_rule(self, rule: VPNRule):
+        rule.id = len(self.rules)
+        self.rules.append(rule)
+
+        print('Rule added\n')
+
+    def show_rules(self):
+        for i in self.rules:
+            print(f'Id: {i.id} Name: {i.name}')
+        print()
+
+    def remove_rule(self, rule_id: int):
+        if rule_id < 0 or rule_id >= len(self.rules):
+            print('Rule not found\n')
+
+            return
+
+        new_rules = []
+        ind = 0
+
+        for i in self.rules:
+            if i.id != rule_id:
+                i.id = ind
+                ind += 1
+
+                new_rules.append(i)
+
+        self.rules = new_rules
+
+        print('Rule removed\n')
+
     def show_users(self):
         for i in self.__data:
             print(
@@ -110,6 +102,12 @@ class VPN:
             print('User not found\n')
 
             return
+
+        for i in self.rules:
+            if not i.check(user, body):
+                print(f'Rule {i.name} blocked\n')
+
+                return
 
         self.protocol.send(body.data, (body.dest_ip, body.dest_port))
 

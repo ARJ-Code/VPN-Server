@@ -1,6 +1,6 @@
 from udp import UDP
 from tcp import TCP
-from vpn import VPNBody
+from vpn_core import VPNBody
 import json
 import sys
 
