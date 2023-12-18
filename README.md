@@ -15,7 +15,7 @@ Para ejecutar el proyecto debe contar un interprete de **Python** en su sistema 
 make run
 ```
 
-- Para inicial el `cliente` de prueba:
+- Para inicial el `client` de prueba:
 
 ```
 make cliente protocol=<protocol_name>
