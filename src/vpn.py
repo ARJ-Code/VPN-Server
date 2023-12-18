@@ -5,41 +5,41 @@ from vpn_core import VPNBody, UserClient, NetWorkProtocol, VPNRule
 
 class VPN:
     def __init__(self, protocol: NetWorkProtocol) -> None:
-        self.__data = VPN.__read_data()
+        self.__users = VPN.__read_data('data/users.json')
         self.protocol = protocol
         self.rules = []
 
     def create_user(self, user: UserClient):
-        if any(user.user == i.user for i in self.__data):
+        if any(user.user == i.user for i in self.__users):
             print('User already registered\n')
 
             return
 
-        user.id = len(self.__data)
-        self.__data.append(user)
+        user.id = len(self.__users)
+        self.__users.append(user)
 
-        self.__save_data()
+        self.__save_data('data/users.json')
 
         print('User registered\n')
 
     def remove_user(self, user_id: int):
-        if user_id < 0 or user_id >= len(self.__data):
+        if user_id < 0 or user_id >= len(self.__users):
             print('User not found\n')
 
             return
 
-        new_data = []
+        new_users = []
         ind = 0
 
-        for i in self.__data:
+        for i in self.__users:
             if i.id != user_id:
                 i.id = ind
                 ind += 1
 
-                new_data.append(i)
+                new_users.append(i)
 
-        self.__data = new_data
-        self.__save_data()
+        self.__users = new_users
+        self.__save_data('data/users.json')
 
         print('User removed\n')
 
@@ -89,14 +89,14 @@ class VPN:
         print('Rule removed\n')
 
     def show_users(self):
-        for i in self.__data:
+        for i in self.__users:
             print(
                 f'Id: {i.id} User: {i.user} Password: {i.password} Id_VLAN: {i.id_vlan}')
         print()
 
     def __request(self, body: VPNBody):
         user = next(
-            (i for i in self.__data if i.user == body.user and i.password == body.password), None)
+            (i for i in self.__users if i.user == body.user and i.password == body.password), None)
 
         if user is None:
             print('User not found\n')
@@ -112,8 +112,7 @@ class VPN:
         self.protocol.send(body.data, (body.dest_ip, body.dest_port))
 
     @staticmethod
-    def __read_data():
-        path: str = 'data.json'
+    def __read_data(path: str):
         if not os.path.exists(path):
             return []
 
@@ -126,9 +125,8 @@ class VPN:
         except:
             return []
 
-    def __save_data(self):
-        path = 'data.json'
+    def __save_data(self, path: str):
 
         file = open(path, 'w')
-        json.dump(self.__data,  file, default=lambda o: o.__dict__)
+        json.dump(self.__users,  file, default=lambda o: o.__dict__)
         file.close()
