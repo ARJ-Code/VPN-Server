@@ -1,5 +1,6 @@
 import os
 import json
+from rules import RestrictUser, RestrictVLAN
 from vpn_core import VPNBody, UserClient, NetWorkProtocol, VPNRule
 
 
@@ -73,8 +74,8 @@ class VPN:
     def show_rules(self):
         for i in self.__rules:
             _type = 'VLAN Restriction' if i._type == 0 else 'User Restriction'
-            # e_id = f'id_vlan: {i.e_id}' if i._type == 0 else f'user_id: {i.e_id}'
-            print(f'Id: {i.id} Name: {i.name} Type: {_type}')
+            e_id = f'id_vlan: {i.e_id}' if i._type == 0 else f'user_id: {i.e_id}'
+            print(f'Id: {i.id} Name: {i.name} Type: {_type} {e_id} ip: {i.ip}')
         print()
 
     def remove_rule(self, rule_id: int):
@@ -155,8 +156,15 @@ class VPN:
             file = open(path, 'r')
             data = json.load(file)
             file.close()
+        
+            rules = []
+            for i in data:
+                if i['type'] == 0:
+                    rules.append(RestrictVLAN.dict_to_obj(i))
+                else:
+                    rules.append(RestrictUser.dict_to_obj(i))
 
-            return [VPNRule.dict_to_obj(i) for i in data]
+            return rules
         except:
             return []
 

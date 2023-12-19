@@ -66,7 +66,3 @@ class VPNRule(ABC):
     @abstractmethod
     def check(self, user: UserClient, body: VPNBody):
         pass
-
-    @abstractmethod
-    def dict_to_obj(dict):
-        pass
