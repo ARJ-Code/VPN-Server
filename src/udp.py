@@ -32,7 +32,7 @@ class UDP(NetWorkProtocol):
 
         s.sendto(udp_header + data, (dest_ip, dest_port))
 
-        print(f'UDP data sent to {dest_ip}{dest_port}\n')
+        print(f'UDP data sent to {dest_ip}:{dest_port}\n')
 
     def run(self):
         self.__stop = False

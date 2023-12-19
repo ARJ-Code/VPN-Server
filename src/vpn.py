@@ -141,7 +141,7 @@ class VPN:
     def __save_users(self):
         path: str = 'data/users.json'
 
-        file = open(path, 'w')
+        file = open(path, 'w+')
         json.dump(self.__users,  file, default=lambda o: o.__dict__)
         file.close()
 
@@ -171,7 +171,7 @@ class VPN:
     def __save_rules(self):
         path: str = 'data/rules.json'
 
-        file = open(path, 'w')
+        file = open(path, 'w+')
         json.dump(self.__rules,  file, default=lambda o: {
             'name': o.name,
             'type': o._type,
