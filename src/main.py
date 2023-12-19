@@ -14,6 +14,7 @@ def help():
     print("stop: Stop the VPN")
     print("restrict_user <rule_name> <id_user> <dest_ip>: Restrict a user to sent data")
     print("restrict_vlan <rule_name> <id_vlan> <dest_ip>: Restrict a vlan to sent data")
+    print("show_rules: Show all rules")
     print("exit: Exit the program\n")
 
 
