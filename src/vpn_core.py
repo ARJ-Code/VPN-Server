@@ -56,10 +56,17 @@ class VPNBody:
 
 
 class VPNRule(ABC):
-    def __init__(self, name):
+    def __init__(self, name, _type, ip, e_id):
         self.name = name
+        self._type = _type
+        self.ip = '127.0.0.1' if ip == 'localhost'else ip
+        self.e_id = e_id
         self.id = 0
 
     @abstractmethod
     def check(self, user: UserClient, body: VPNBody):
+        pass
+
+    @abstractmethod
+    def dict_to_obj(dict):
         pass
