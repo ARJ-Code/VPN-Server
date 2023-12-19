@@ -38,6 +38,7 @@ Comandos y funcionalidades:
 - `show_users`: Muestra los usuarios registrados.
 - `start <protocol>`: Inicia el servidor con el protocolo establecido.
 - `stop`: Detiene el servidor.
+- `show_rules`: Muestra las reglas aplicadas al servidor.
 - `restrict_user <rule_name> <id_user> <dest_ip>`: Restringe el acceso de un usuario a una dirección ip.
 - `restrict_vlan <rule_name> <id_vlan> <dest_ip>`: Restringe el accesos de todos los usuarios de una **VLAN**.
 - `help`: Muestra información de los comandos.
