@@ -12,8 +12,8 @@ def help():
     print('show_users: Show all users')
     print("start <protocol>: Start the VPN")
     print("stop: Stop the VPN")
-    print("restrict_user <rule_name> <id_user> <dest_ip>: Restrict a user to sent data")
-    print("restrict_vlan <rule_name> <id_vlan> <dest_ip>: Restrict a vlan to sent data")
+    print("restrict_user <rule_name> <id_user> <dest_ip> <dest_port>: Restrict a user to sent data")
+    print("restrict_vlan <rule_name> <id_vlan> <dest_ip> <dest_port>: Restrict a vlan to sent data")
     print("show_rules: Show all rules")
     print("exit: Exit the program\n")
 
@@ -74,12 +74,14 @@ while True:
         vpn_thread.join()
         vpn_thread = None
 
-    elif command[0] == 'restrict_vlan' and len(command) == 4 and str.isdigit(command[2]):
-        rule = RestrictVLAN(command[1], command[3], int(command[2]))
+    elif command[0] == 'restrict_vlan' and len(command) == 5 and str.isdigit(command[2]) and str.isdigit(command[4]):
+        rule = RestrictVLAN(command[1], command[3],
+                            int(command[4]), int(command[2]))
         vpn.add_rule(rule)
 
-    elif command[0] == 'restrict_user' and len(command) == 4 and str.isdigit(command[2]):
-        rule = RestrictUser(command[1], command[3], int(command[2]))
+    elif command[0] == 'restrict_user' and len(command) == 5 and str.isdigit(command[2]) and str.isdigit(command[4]):
+        rule = RestrictUser(command[1], command[3],
+                            int(command[4]), int(command[2]))
         vpn.add_rule(rule)
 
     elif command[0] == "show_rules":
@@ -89,6 +91,9 @@ while True:
         vpn.remove_rule(int(command[1]))
 
     elif command[0] == "exit":
+        if (vpn_thread is not None):
+            vpn.stop()
+            vpn_thread.join()
         break
 
     elif command[0] == "help":

@@ -63,7 +63,7 @@ class VPN:
             print('There is a rule with that name\n')
 
             return
-        
+
         rule.id = len(self.__rules)
         self.__rules.append(rule)
 
@@ -75,7 +75,8 @@ class VPN:
         for i in self.__rules:
             _type = 'VLAN Restriction' if i._type == 0 else 'User Restriction'
             e_id = f'id_vlan: {i.e_id}' if i._type == 0 else f'user_id: {i.e_id}'
-            print(f'Id: {i.id} Name: {i.name} Type: {_type} {e_id} ip: {i.ip}')
+            print(
+                f'Id: {i.id} Name: {i.name} Type: {_type} {e_id} ip: {i.ip} port: {i.port}')
         print()
 
     def remove_rule(self, rule_id: int):
@@ -156,7 +157,7 @@ class VPN:
             file = open(path, 'r')
             data = json.load(file)
             file.close()
-        
+
             rules = []
             for i in data:
                 if i['type'] == 0:
@@ -176,6 +177,7 @@ class VPN:
             'name': o.name,
             'type': o._type,
             'ip': o.ip,
+            'port': o.port,
             'e_id': o.e_id
         })
         file.close()
